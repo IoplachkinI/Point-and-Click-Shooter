@@ -388,6 +388,11 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 }
 
 
+void empty() {
+	cout << "Im empty" << endl;
+}
+
+
 ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, map<string, int>& parameters)
 {
 	int ticks = 0;
