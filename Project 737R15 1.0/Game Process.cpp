@@ -302,11 +302,31 @@ public:
 
 
 class BombTarget : public BasicTarget {
+private:
+	int bombradius;
 public:
 
-	BombTarget(float r, float x, float y, string fileName, RenderWindow& w, GameColor color) :
-		BasicTarget(r, x, y, fileName, w, color) {}
+	BombTarget(float r, float x, float y, string fileName, RenderWindow& w, GameColor color, int Bombradius) :
+		BasicTarget(r, x, y, fileName, w, color) {
+		bombradius = Bombradius;
+	}
+	int getbombradius() {
+		return bombradius;
+	}
+
+	void explosion(vector<shared_ptr<BasicTarget>>& targets) {
+		for (shared_ptr<BasicTarget>& target : targets) {
+			if (sqrt(pow(pos.x - target->getPos().x, 2) + pow(pos.y - target->getPos().x, 2)) <= this->bombradius && target->toDraw) {
+
+				target->toDraw = false;
+				target->destroyed = true;
+			}
+		}
+
+		destroyed = false;
+	}
 };
+
 
 
 class HealTarget : public BasicTarget {
@@ -410,10 +430,10 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	int animationSwitchTime = 50; // milliseconds
 	int clickPeriod = 50; // milliseconds
 
-	float interpValue = 0.0;
+	float interpValue = 0.f;
 	int lives = maxLives;
-	float sizeCoeff = 20.0;
-	bool alreadyClicked = false;
+	float sizeCoeff = 20.f;
+	bool alreadyClicked = true; // if false - a click on a target will count and it being false represents an actual click
 
 	long long now = std::chrono::duration_cast<std::chrono::milliseconds>
 		(std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -470,7 +490,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	for (int i = 0; i < parameters["bombProb"] / targetAmountCoeff; i++) {
 		float radius = float(window.getSize().x) / 15.f;
 		shared_ptr<BombTarget> newTarget = make_shared<BombTarget>(radius, (rand() % (window.getSize().x - 2 * int(radius))) + radius, window.getSize().y + (rand() % long(radius)) + radius,
-			"targets.png", window, colors[rand() % colors.size()]);
+			"targets.png", window, colors[rand() % colors.size()], 400);
 		newTarget->toDraw = false;
 		targets.push_back(newTarget);
 		bombTargets.push_back(newTarget);
@@ -514,10 +534,26 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 				case Event::Closed:
 					window.close();
 					break;
-				case Event::LostFocus:
+				case Event::LostFocus: {
 					if (pauseMenu(window, drawables, mouse) == ExitCode::BackToRoot) {
 						return ExitCode::BackToRoot;
 					}
+					GameColor selectedColor = GameColor::Red;
+
+					for (auto selector : colorSelectors) {
+						if (selector->getIsSelected()) {
+							GameColor selectedColor = selector->getColor();
+							break;
+						}
+					}
+					now = std::chrono::duration_cast<std::chrono::milliseconds>
+						(std::chrono::steady_clock::now().time_since_epoch()).count();
+					mouse.setColor(selectedColor);
+					cycleStartTime = now;
+					lastNow = now;
+					lastTimer = now;
+					break;
+				}
 				case Event::KeyPressed:
 					if (Keyboard::isKeyPressed(Keyboard::Num1) || Keyboard::isKeyPressed(Keyboard::Z)) {
 						mouse.setColor(GameColor::Red);
@@ -553,9 +589,10 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 								break;
 							}
 						}
+						now = std::chrono::duration_cast<std::chrono::milliseconds>
+							(std::chrono::steady_clock::now().time_since_epoch()).count();
 						mouse.setColor(selectedColor);
 						cycleStartTime = now;
-						interpValue = 0.f;
 						lastNow = now;
 						lastTimer = now;
 					}
@@ -583,6 +620,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 							target->setPos(float(rand() % (window.getSize().x - 2 * int(target->getRadius())) + target->getRadius()), window.getSize().y + (rand() % 4 * long(target->getRadius())) + target->getRadius());
 							//target->healer = rand() % healProbability == 0;
 							target->toDraw = true;
+							target->destroyed = false;
 
 							if (rand() % 5 == 0 && spawnProbability >= 10) {
 								spawnProbability--; //this increases the spawn rate
@@ -663,6 +701,14 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 				}
 			}
 
+			for (auto target : bombTargets) {
+				if (target->destroyed) {
+					target->explosion(targets);
+					target->destroyed = false;
+				}
+			}
+
+
 			interpValue = 0.0;
 			lastNow = now;
 		}
@@ -694,7 +740,9 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 
 		window.clear(sf::Color(255, 255, 255));
 
-		interpValue += float(tps) / float(fps) * (now - cycleStartTime >= 1000);
+		if (now - cycleStartTime >= 1000) {
+			interpValue += float(tps) / float(fps);
+		}
 
 		for (int i = 0; i < int(hearts.size()); i++) {
 			if (hearts[i]->toAnimate && now - hearts[i]->lastAnimationTime >= animationSwitchTime) {
