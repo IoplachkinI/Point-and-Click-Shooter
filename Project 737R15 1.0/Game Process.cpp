@@ -354,10 +354,6 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 	buttons.push_back(&exitButton);
 	buttons.push_back(&continueButton);
 
-	for (int i = 0; i < int(buttons.size()); i++) {
-		drawables.push_back(shared_ptr<Button>(buttons[i]));
-	}
-
 	while (window.isOpen())
 	{
 		Event event;
@@ -367,16 +363,22 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 		while (window.pollEvent(event)) {
 			eventHandler(event, window, mouse, buttons, oneSelected);
 
-			if (pressCheckChoose(&exitButton)) {
+			if (pressCheckChoose(buttons[0])) {
+				mouse.changeToArrow();
 				return ExitCode::BackToRoot;
 			}
-			else if (pressCheckChoose(&continueButton)) {
-				return ExitCode::Stay;
+			else if (pressCheckChoose(buttons[1])) {
+				mouse.changeToArrow();
+				return ExitCode::Play;
 			}
 		}
 
 		for (int i = 0; i < int(drawables.size()); i++) {
 			drawables[i]->drawObj();
+		}
+
+		for (auto button : buttons) {
+			button->drawObj();
 		}
 
 		window.setMouseCursor(mouse.getCursor());
@@ -386,6 +388,9 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 
 	return ExitCode::BackToRoot;
 }
+
+
+
 
 
 ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, map<string, int>& parameters)
@@ -659,8 +664,6 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 			interpValue = 0.0;
 			lastNow = now;
 		}
-
-		cout << lives << endl;
 
 		try {
 			std::this_thread::sleep_for(std::chrono::milliseconds(2));

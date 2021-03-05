@@ -35,9 +35,6 @@ void GameCursor::setColor(GameColor color) {
 		texture.loadFromFile("cursor_yellow2.png");
 		cursor.loadFromPixels(texture.getPixelsPtr(), sf::Vector2u(size, size), sf::Vector2u(size / 2, size / 2));
 		break;
-	case GameColor::White:
-		cursor.loadFromSystem(cursor.Arrow);
-		break;
 	}
 }
 

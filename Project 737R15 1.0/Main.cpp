@@ -129,6 +129,7 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 
 			if (Keyboard::isKeyPressed(Keyboard::Escape))
 			{
+				mouse.changeToArrow();
 				return ExitCode::BackToRoot;
 			}
 		}
@@ -293,14 +294,15 @@ ExitCode mainMenu(RenderWindow& window, BG& background, GameCursor& mouse)
 
 			if (pressCheckChoose(&endlessButton) && not inOtherMenu)
 			{
+				mouse.changeToArrow();
 				return ExitCode::Play;
 			}
 
 			else if (pressCheckChoose(&settingsButton) && not inOtherMenu)
 			{
-				mouse.changeToArrow();
 				inOtherMenu = true;
 				settingsButton.isSelected = false;
+				mouse.changeToArrow();
 				return ExitCode::Settings;
 			}
 
@@ -366,7 +368,6 @@ int main() {
 	{
 		switch (mainMenu(window, background, mouse)) {
 		case ExitCode::BackToRoot:
-			mouse.setColor(GameColor::White);
 			return 0;
 
 		case ExitCode::Settings:
@@ -387,6 +388,7 @@ int main() {
 			if (difficultyMenu(window, mouse, background, parameters) == ExitCode::Play) {
 				switch (GameLoop(maxFPS, window, mouse, parameters)) {
 				case ExitCode::BackToRoot:
+					mouse.changeToArrow();
 					break;
 				case ExitCode::GameOver:
 					while (postGameScreen(window, background, mouse) == ExitCode::Play) {

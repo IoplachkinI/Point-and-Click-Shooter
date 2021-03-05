@@ -7,7 +7,7 @@ int eventHandler(sf::Event& event, sf::RenderWindow& window, GameCursor& mouse, 
 	{
 	case sf::Event::Closed:
 	{
-		mouse.setColor(GameColor::White);
+		mouse.changeToArrow();
 		window.close();
 	};
 	break;
