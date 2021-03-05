@@ -301,10 +301,29 @@ public:
 
 
 class BombTarget : public BasicTarget {
+private:
+	int bombradius;
 public:
 
-	BombTarget(float r, float x, float y, string fileName, RenderWindow& w, GameColor color) :
-		BasicTarget(r, x, y, fileName, w, color) {}
+	BombTarget(float r, float x, float y, string fileName, RenderWindow& w, GameColor color, int Bombradius) :
+		BasicTarget(r, x, y, fileName, w, color) {
+		bombradius = Bombradius;
+	}
+	int getbombradius() {
+		return bombradius;
+	}
+	
+	void explosion(vector<shared_ptr<BasicTarget>>& targets) {
+		for (shared_ptr<BasicTarget>& target : targets) {
+			if (sqrt(pow(pos.x - target->getPos().x,2)) + (pow(pos.y - target->getPos().x,2)) >= this->bombradius) {
+				
+				target->toDraw = false;
+				target->destroyed = true;
+			}
+
+
+		}
+	}
 };
 
 
@@ -469,7 +488,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	for (int i = 0; i < parameters["bombProb"] / targetAmountCoeff; i++) {
 		float radius = float(window.getSize().x) / 15.f;
 		shared_ptr<BombTarget> newTarget = make_shared<BombTarget>(radius, (rand() % (window.getSize().x - 2 * int(radius))) + radius, window.getSize().y + (rand() % long(radius)) + radius,
-			"targets.png", window, colors[rand() % colors.size()]);
+			"targets.png", window, colors[rand() % colors.size()], 900);
 		newTarget->toDraw = false;
 		targets.push_back(newTarget);
 		bombTargets.push_back(newTarget);
@@ -582,6 +601,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 							target->setPos(float(rand() % (window.getSize().x - 2 * int(target->getRadius())) + target->getRadius()), window.getSize().y + (rand() % 4 * long(target->getRadius())) + target->getRadius());
 							//target->healer = rand() % healProbability == 0;
 							target->toDraw = true;
+							target->destroyed = false;
 
 							if (rand() % 5 == 0 && spawnProbability >= 10) {
 								spawnProbability--; //this increases the spawn rate
@@ -661,7 +681,11 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 					}
 				}
 			}
-
+			for (auto target : bombTargets) {
+				if (target->destroyed) {
+					target->explosion(targets);
+				}
+			}
 			interpValue = 0.0;
 			lastNow = now;
 		}
