@@ -21,6 +21,7 @@ extern const float tps = 20;
 const double millisecPerTick = (double)1000/(double)tps;
 const int xSize = 10;
 const int ySize = 24;
+int y = 0;
 
 
 class ColorSelector : public DrawableObj{
