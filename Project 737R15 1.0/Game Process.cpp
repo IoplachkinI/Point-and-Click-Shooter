@@ -302,11 +302,31 @@ public:
 
 
 class BombTarget : public BasicTarget {
+private:
+	int bombradius;
 public:
 
-	BombTarget(float r, float x, float y, string fileName, RenderWindow& w, GameColor color) :
-		BasicTarget(r, x, y, fileName, w, color) {}
+	BombTarget(float r, float x, float y, string fileName, RenderWindow& w, GameColor color, int Bombradius) :
+		BasicTarget(r, x, y, fileName, w, color) {
+		bombradius = Bombradius;
+	}
+	int getbombradius() {
+		return bombradius;
+	}
+
+	void explosion(vector<shared_ptr<BasicTarget>>& targets) {
+		for (shared_ptr<BasicTarget>& target : targets) {
+			if (sqrt(pow(pos.x - target->getPos().x, 2) + pow(pos.y - target->getPos().x, 2)) <= this->bombradius && target->toDraw) {
+
+				target->toDraw = false;
+				target->destroyed = true;
+			}
+		}
+
+		destroyed = false;
+	}
 };
+
 
 
 class HealTarget : public BasicTarget {
@@ -470,7 +490,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	for (int i = 0; i < parameters["bombProb"] / targetAmountCoeff; i++) {
 		float radius = float(window.getSize().x) / 15.f;
 		shared_ptr<BombTarget> newTarget = make_shared<BombTarget>(radius, (rand() % (window.getSize().x - 2 * int(radius))) + radius, window.getSize().y + (rand() % long(radius)) + radius,
-			"targets.png", window, colors[rand() % colors.size()]);
+			"targets.png", window, colors[rand() % colors.size()], 400);
 		newTarget->toDraw = false;
 		targets.push_back(newTarget);
 		bombTargets.push_back(newTarget);
@@ -680,6 +700,14 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 					}
 				}
 			}
+
+			for (auto target : bombTargets) {
+				if (target->destroyed) {
+					target->explosion(targets);
+					target->destroyed = false;
+				}
+			}
+
 
 			interpValue = 0.0;
 			lastNow = now;
