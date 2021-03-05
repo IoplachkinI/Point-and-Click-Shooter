@@ -403,7 +403,5 @@ int main() {
 			return 0;
 		}
 	}
-
-	mouse.setColor(GameColor::White);
 	return 0;
 }
