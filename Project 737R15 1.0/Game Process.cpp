@@ -200,7 +200,6 @@ public:
 
 class BasicTarget : public DrawableObj{
 protected:
-	float radius;
 	float interpValue;
 	Vector2f pos;
 	Vector2f prevPos;
@@ -240,7 +239,6 @@ public:
 	}
 
 	BasicTarget(float r, float x, float y, string fileName, RenderWindow& w, GameColor color) :
-		radius(r),
 		fileName(fileName),
 		window(w)
 	{
@@ -249,8 +247,8 @@ public:
 		}
 		pos = Vector2f(x, y);
 		prevPos = pos;
-		object.setRadius(radius);
-		object.setOrigin(radius, radius);
+		object.setRadius(r);
+		object.setOrigin(r, r);
 		object.setPosition(pos);
 		setColor(color);
 		toDraw = true;
@@ -270,20 +268,20 @@ public:
 
 	void setPos(Vector2f newPos) {
 		object.setPosition(newPos);
-		object.setOrigin(radius, radius); 
+		object.setOrigin(object.getRadius(), object.getRadius());
 		prevPos = pos;
 		pos = newPos;
 	}
 
 	void setPos(float x, float y) {
 		object.setPosition(Vector2f(x, y));
-		object.setOrigin(radius, radius);
+		object.setOrigin(object.getRadius(), object.getRadius());
 		prevPos = pos;
 		pos = Vector2f(x, y);
 	}
 
 	float getRadius() {
-		return radius;
+		return object.getRadius();
 	}
 
 	Vector2f getPos() {
@@ -295,7 +293,7 @@ public:
 	}
 
 	bool isHoveredOver(GameCursor& mouse) {
-		return (sqrt(pow(pos.x - mouse.getPos(window).x, 2) + pow(pos.y - mouse.getPos(window).y, 2)) <= radius);
+		return (sqrt(pow(pos.x - mouse.getPos(window).x, 2) + pow(pos.y - mouse.getPos(window).y, 2)) <= object.getRadius());
 	}
 
 };
@@ -306,24 +304,25 @@ private:
 	int bombradius;
 public:
 
+	long long animatetimer;
+
 	BombTarget(float r, float x, float y, string fileName, RenderWindow& w, GameColor color, int Bombradius) :
 		BasicTarget(r, x, y, fileName, w, color) {
 		bombradius = Bombradius;
+		animatetimer = 0;
 	}
+
 	int getbombradius() {
 		return bombradius;
 	}
 
 	void explosion(vector<shared_ptr<BasicTarget>>& targets) {
 		for (shared_ptr<BasicTarget>& target : targets) {
-			if (sqrt(pow(pos.x - target->getPos().x, 2) + pow(pos.y - target->getPos().x, 2)) <= this->bombradius && target->toDraw) {
-
+			if (sqrt(pow(pos.x - target->getPos().x, 2) + pow(pos.y - target->getPos().y, 2)) <= this->bombradius && target->toDraw) {
 				target->toDraw = false;
 				target->destroyed = true;
 			}
 		}
-
-		destroyed = false;
 	}
 };
 
@@ -364,6 +363,9 @@ void deselectOthers(vector<shared_ptr<ColorSelector>>& selectors, int selectedIn
 		}
 	}
 };
+
+
+
 
 
 ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawables, GameCursor& mouse) {
@@ -412,7 +414,9 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 }
 
 
-
+/*float const getRandXposition (vector<shared_ptr<BasicTarget>>& targets, shared_ptr<BasicTarget> target, RenderWindow& window)  {
+	float assumedX = float(rand() % (window.getSize().x - 2 * int(target->getRadius())) + target->getRadius());
+}*/
 
 
 ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, map<string, int>& parameters)
@@ -423,6 +427,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	int targetAmountCoeff = 5; // 100 / <this value> = actual amount of targets that can be on screen at once
 
 	int spawnProbability = int(tps) / parameters["spawnRate"] * 4;
+	int minSpawnProbability = spawnProbability / 2;
 	int healProbability = (parameters["healProb"] == 0) ? 0 : 100 / parameters["healProb"];
 	int bombProbability = (parameters["bombProb"] == 0) ? 0 : 100 / parameters["bombProb"];
 	float speed = float(parameters["speed"] * -1.f);
@@ -452,9 +457,9 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	vector <shared_ptr<BombTarget>> bombTargets;
 	vector <shared_ptr<DrawableObj>> drawables;
 
-	BG background(float(window.getSize().x), float(window.getSize().y), window, "Bg2.png", sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(360, 360)));
+	shared_ptr<BG> background = make_shared<BG>(float(window.getSize().x), float(window.getSize().y), window, "Bg6.jpg", sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(1242, 1242)));
 
-	//drawables.push_back(&background);
+	drawables.push_back(background);
 
 	if (colors.size() % 2 == 0) {
 		xColorSelector = float(window.getSize().x) / 2.f - (colors.size() / 2) * (float(window.getSize().x) / sizeCoeff) + (float(window.getSize().x) / sizeCoeff) / 2.f;
@@ -490,7 +495,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	for (int i = 0; i < parameters["bombProb"] / targetAmountCoeff; i++) {
 		float radius = float(window.getSize().x) / 15.f;
 		shared_ptr<BombTarget> newTarget = make_shared<BombTarget>(radius, (rand() % (window.getSize().x - 2 * int(radius))) + radius, window.getSize().y + (rand() % long(radius)) + radius,
-			"targets.png", window, colors[rand() % colors.size()], 400);
+			"bomb_targets.png", window, colors[rand() % colors.size()], 400);
 		newTarget->toDraw = false;
 		targets.push_back(newTarget);
 		bombTargets.push_back(newTarget);
@@ -512,7 +517,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	window.setMouseCursorVisible(true);
 
 	for (int i = 0; i < lives; i++) {
-		shared_ptr<Heart> heart = make_shared<Heart>(window.getSize().x / sizeCoeff, xHeart, window.getSize().x / sizeCoeff, window, "Heart.png");
+		shared_ptr<Heart> heart = make_shared<Heart>(window.getSize().x / sizeCoeff, xHeart, window.getSize().x / sizeCoeff, window, "heart.png");
 		hearts.push_back(heart);
 		xHeart += window.getSize().x / sizeCoeff;
 		hearts[i]->animate();
@@ -535,6 +540,11 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 					window.close();
 					break;
 				case Event::LostFocus: {
+					mouse.changeToArrow();
+
+					long long lastNowDiff = now - lastNow;
+					long long lastTimerDiff = now - lastTimer;
+
 					if (pauseMenu(window, drawables, mouse) == ExitCode::BackToRoot) {
 						return ExitCode::BackToRoot;
 					}
@@ -550,8 +560,8 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 						(std::chrono::steady_clock::now().time_since_epoch()).count();
 					mouse.setColor(selectedColor);
 					cycleStartTime = now;
-					lastNow = now;
-					lastTimer = now;
+					lastNow = now - lastNowDiff;
+					lastTimer = now - lastTimerDiff;
 					break;
 				}
 				case Event::KeyPressed:
@@ -576,7 +586,11 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 						deselectOthers(colorSelectors, 3);
 					}
 					if (Keyboard::isKeyPressed(Keyboard::Escape)) {
-						mouse.setColor(GameColor::White);
+						mouse.changeToArrow();
+
+						long long lastNowDiff = now - lastNow;
+						long long lastTimerDiff = now - lastTimer;
+
 						if (pauseMenu(window, drawables, mouse) == ExitCode::BackToRoot) {
 							return ExitCode::BackToRoot;
 						}
@@ -589,12 +603,13 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 								break;
 							}
 						}
+
 						now = std::chrono::duration_cast<std::chrono::milliseconds>
 							(std::chrono::steady_clock::now().time_since_epoch()).count();
 						mouse.setColor(selectedColor);
 						cycleStartTime = now;
-						lastNow = now;
-						lastTimer = now;
+						lastNow = now - lastNowDiff;
+						lastTimer = now - lastTimerDiff;
 					}
 					break;
 				case Event::MouseButtonPressed:
@@ -605,7 +620,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 			}
 		}
 
-		if (now-lastNow >= millisecPerTick && now - cycleStartTime >= 1000) {
+		while (now-lastNow >= millisecPerTick && now - cycleStartTime >= 1000) {
 
 			if (rand() % spawnProbability == 0) {
 				auto target = targets[rand() % targets.size()];
@@ -618,13 +633,11 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 						if (!target->toDraw) {
 							target->setColor(colors[rand() % colors.size()]);
 							target->setPos(float(rand() % (window.getSize().x - 2 * int(target->getRadius())) + target->getRadius()), window.getSize().y + (rand() % 4 * long(target->getRadius())) + target->getRadius());
-							//target->healer = rand() % healProbability == 0;
 							target->toDraw = true;
 							target->destroyed = false;
 
-							if (rand() % 5 == 0 && spawnProbability >= 10) {
+							if (rand() % 5 == 0 && spawnProbability >= minSpawnProbability) {
 								spawnProbability--; //this increases the spawn rate
-								speed -= 0.5; //this increases speed
 							}
 							break;
 						}
@@ -669,16 +682,6 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 					if (target->isHoveredOver(mouse) && target->compareColor(mouse.getColor()) && !alreadyClicked) {
 						target->toDraw = false;
 						target->destroyed = true;
-						/*if (target->healer) {
-							for (int i = 0; i < target->heal(lives, maxLives); i++) {
-								for (int i = hearts.size() - 1; i >= 0; i--) {
-									if (hearts[i]->getStage() == 4) {
-										hearts[i]->toAnimateBackwards = true;
-										break;
-									}
-								}
-							}
-						}*/
 					}
 				}
 			}
@@ -708,7 +711,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 				}
 			}
 
-
+			speed -= 0.01 * float(parameters["accel"]); //this increases speed
 			interpValue = 0.0;
 			lastNow = now;
 		}
@@ -724,8 +727,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 
 		frames++;
 
-		if (now - lastTimer >= 1000) {
-			//system("cls");
+		if (now - lastTimer >= 1000 && now - lastTimer <= 1200) {
 			//cout << "FPS:" << frames << endl;
 			//cout << "TPS:" << ticks << endl;
 			fps = frames;
@@ -769,34 +771,6 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 		for (auto object : drawables) {
 			object->drawObj();
 		}
-
-		/*for (shared_ptr<Heart>& heart : hearts) {
-			if (heart->toAnimate && heart->getStage() == 1) {
-				heart->toAnimateBackwards = false;
-				heart->animateTimer = now;
-				heart->animate();
-			}
-
-			if (heart->toAnimate && now - heart->animateTimer >= animationSwitchTime) {
-				heart->animateTimer = now;
-				if (heart->animate() == 1) {
-					heart->toAnimate = false;
-				}
-			}
-
-			if (heart->toAnimateBackwards && heart->getStage() == 4) {
-				heart->toAnimate = false;
-				heart->animateTimer = now;
-				heart->animateBackwards();
-			}
-			if (heart->toAnimateBackwards && now - heart->animateTimer >= animationSwitchTime) {
-				heart->animateTimer = now;
-				if (heart->animateBackwards()) {
-					heart->toAnimateBackwards = false;
-				}
-			}
-			heart->draw();
-		}*/
 
 		window.display();
 	}

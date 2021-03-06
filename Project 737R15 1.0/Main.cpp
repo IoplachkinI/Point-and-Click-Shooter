@@ -139,64 +139,6 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 		timePassed = 0;
 		oneClicked = false;
 
-		/*while (pressCheck(buttons[2], Keyboard::Right)) {
-			timePassed++;
-			if (not oneClicked && musicVolume < 100) {
-				musicVolume++;
-				oneClicked = true;
-			}
-
-			if (timePassed >= ChangeTime && musicVolume < 100) {
-				timePassed = 0;
-				ChangeTime--;
-				musicVolume++;
-			}
-
-			buttons[2].changeText("MUSIC VOLUME " + to_string(musicVolume));
-
-			background.draw();
-
-			for (int i = 0; i < buttons.size(); i++) {
-				buttons[i].drawBase();
-				buttons[i].drawText(true);
-			}
-
-			window.display();
-		}
-
-		oneClicked = false;
-
-		while (pressCheck(buttons[2], Keyboard::Left)) {
-			timePassed++;
-			if (not oneClicked && musicVolume > 0) {
-				musicVolume--;
-				oneClicked = true;
-			}
-
-			if (timePassed >= ChangeTime && musicVolume > 0) {
-				timePassed = 0;
-				ChangeTime--;
-				musicVolume--;
-			}
-
-			buttons[2].changeText("MUSIC VOLUME " + to_string(musicVolume));
-
-			background.draw();
-
-			for (int i = 0; i < buttons.size(); i++) {
-				buttons[i].drawBase();
-				buttons[i].drawText(true);
-			}
-
-			window.display();
-		}*/
-
-		/*else if (pressCheckChoose(buttons[3])) {
-			waitingForInput = true;
-			rebindedKey = 0;
-			leftKeyButton.changeText("MOVE LEFT KEY: ");
-		}*/
-
 
 		for (DrawableObj* obj : drawables) {
 			obj->drawObj();
@@ -347,11 +289,11 @@ int main() {
 	parameters["speed"] = defaultStartSpeed; // MULTIPLY BY -1.f
 	parameters["accel"] = defaultAcceleration; // MULTIPLY BY 0.5f
 
-	RenderWindow window(VideoMode(sizeX, sizeY), "Point-and-click shooter", Style::Close);
+	RenderWindow window(VideoMode(sizeX, sizeY), "Shooter", Style::Close);
 	window.setFramerateLimit(maxFPS);
 	//window.setVerticalSyncEnabled(true);
 
-	BG background(sizeX, sizeY, window, "RainbowBG.png", IntRect(sf::Vector2i(20, 0), sf::Vector2i(184, 210)));
+	BG background(sizeX, sizeY, window, "menu_background.png", IntRect(sf::Vector2i(20, 0), sf::Vector2i(184, 210)));
 
 	GameCursor mouse;
 
@@ -376,10 +318,6 @@ int main() {
 				curMusicVolume = musicVolume;
 				MainMusic.setVolume(float(curMusicVolume));
 			}
-
-			/*if (settings(sizeX, sizeY, window, background, mouse, musicVolume, leftKey, rightKey, speedUpKey, rotateKey) == 2) {
-
-			}*/
 			 
 			musicVolume = curMusicVolume;
 			break;
