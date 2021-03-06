@@ -76,9 +76,9 @@ int eventHandler(sf::Event& event, sf::RenderWindow& window, GameCursor& mouse, 
 	return 0;
 }
 
-bool const pressCheck(Button* button, sf::Keyboard::Key key)
+bool const pressCheck(Button& button, sf::Keyboard::Key key)
 {
-	if (button->isSelected &&
+	if (button.isSelected &&
 		sf::Keyboard::isKeyPressed(key))
 	{
 		return true;
@@ -87,9 +87,9 @@ bool const pressCheck(Button* button, sf::Keyboard::Key key)
 
 }
 
-bool const pressCheckChoose(Button* button)
+bool const pressCheckChoose(Button& button)
 {
-	if (button->isSelected &&
+	if (button.isSelected &&
 		(sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) ||
 			sf::Mouse::isButtonPressed(sf::Mouse::Left)))
 	{
@@ -98,9 +98,9 @@ bool const pressCheckChoose(Button* button)
 	return false;
 }
 
-bool const pressCheckMouse(Button* button, sf::Mouse::Button key)
+bool const pressCheckMouse(Button& button, sf::Mouse::Button key)
 {
-	if (button->isSelected &&
+	if (button.isSelected &&
 		sf::Mouse::isButtonPressed(key))
 	{
 		return true;
@@ -112,7 +112,7 @@ void sliderHandler(sf::RenderWindow& window, Button& button, std::vector<Drawabl
 	int timePassed = 0;
 	bool oneClicked = false;
 
-	while (pressCheck(&button, sf::Keyboard::Right)) {
+	while (pressCheck(button, sf::Keyboard::Right)) {
 		timePassed++;
 		if (not oneClicked && parameter < upperThreshold) {
 			parameter += step;
@@ -136,7 +136,7 @@ void sliderHandler(sf::RenderWindow& window, Button& button, std::vector<Drawabl
 
 	oneClicked = false;
 
-	while (pressCheck(&button, sf::Keyboard::Left)) {
+	while (pressCheck(button, sf::Keyboard::Left)) {
 		timePassed++;
 		if (not oneClicked && parameter > lowerThreshold) {
 			parameter -= step;

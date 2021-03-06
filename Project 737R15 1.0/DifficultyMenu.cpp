@@ -19,6 +19,7 @@ ExitCode difficultyMenu(RenderWindow& window, GameCursor& mouse, BG& bg, map<str
 
 	Button backButton (float(window.getSize().x) / 2.f, float(window.getSize().y) - 50.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "BACK", window, defaultFont, true);
 	Button playButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 150.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "PLAY", window, defaultFont, true);
+	Button randButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 225.f, 20, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "RANDOMIZE", window, defaultFont, true);
 	Button accelButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f - 250.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255),
 		"ACCELERATION " + to_string(parameters["accel"]), window, defaultFont, true);
 	Button speedButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f - 150.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255),
@@ -32,6 +33,7 @@ ExitCode difficultyMenu(RenderWindow& window, GameCursor& mouse, BG& bg, map<str
 
 	buttons.push_back(&backButton);
 	buttons.push_back(&playButton);
+	buttons.push_back(&randButton);
 	buttons.push_back(&healButton);
 	buttons.push_back(&bombButton);
 	buttons.push_back(&spawnRateButton);
@@ -64,12 +66,24 @@ ExitCode difficultyMenu(RenderWindow& window, GameCursor& mouse, BG& bg, map<str
 					}
 			}
 
-			if (pressCheckChoose(buttons[0])) {
+			if (pressCheckChoose(backButton)) {
 				return ExitCode::BackToRoot;
 			}
-			else if (pressCheckChoose(buttons[1]))
-			{
+			else if (pressCheckChoose(playButton)){
 				return ExitCode::Play;
+			}
+			else if (pressCheckChoose(randButton)) {
+				parameters["healProb"] = (rand() % 21) * 5;
+				parameters["bombProb"] = (rand() % (21 - parameters["healProb"] / 5)) * 5;
+				parameters["spawnRate"] = (rand() % 20) + 1;
+				parameters["speed"] = (rand() % 46) + 5;
+				parameters["accel"] = rand() % 11;
+
+				healButton.changeText("HEALER PROBABILITY " + to_string(parameters["healProb"]) + " %");
+				bombButton.changeText("BOMB PROBABILITY " + to_string(parameters["bombProb"]) + " %");
+				spawnRateButton.changeText("SPAWN RATE " + to_string(parameters["spawnRate"]));
+				speedButton.changeText("SPEED " + to_string(parameters["speed"]));
+				accelButton.changeText("ACCELERATION " + to_string(parameters["accel"]));
 			}
 			else {
 				sliderHandler(window, healButton, drawables, "HEALER PROBABILITY ", " %", 30, parameters["healProb"], 0, 100 - parameters["bombProb"], 5);

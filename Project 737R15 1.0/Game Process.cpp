@@ -408,11 +408,11 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 		while (window.pollEvent(event)) {
 			eventHandler(event, window, mouse, buttons, oneSelected);
 
-			if (pressCheckChoose(buttons[0])) {
+			if (pressCheckChoose(exitButton)) {
 				mouse.changeToArrow();
 				return ExitCode::BackToRoot;
 			}
-			else if (pressCheckChoose(buttons[1])) {
+			else if (pressCheckChoose(continueButton)) {
 				mouse.changeToArrow();
 				return ExitCode::Play;
 			}

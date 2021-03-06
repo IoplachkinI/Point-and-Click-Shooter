@@ -115,12 +115,12 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 
 			sliderHandler(window, volumeButton, drawables, "MUSIC VOLUME ", "", 30, musicVolume, 0, 100, 1);
 
-			if (pressCheckChoose(&applyButton)) {
+			if (pressCheckChoose(applyButton)) {
 				mouse.changeToArrow();
 				return ExitCode::Stay;
 			}
 
-			else if (pressCheckChoose(&backButton))
+			else if (pressCheckChoose(backButton))
 			{
 				backButton.isSelected = false;
 				mouse.changeToArrow();
@@ -179,13 +179,13 @@ ExitCode postGameScreen(RenderWindow& window, BG& background, GameCursor& mouse)
 		while (window.pollEvent(event)) {
 			eventHandler(event, window, mouse, buttons, oneSelected);
 
-			if (pressCheckChoose(&mainMenuButton))
+			if (pressCheckChoose(mainMenuButton))
 			{
 				mouse.changeToArrow();
 				return ExitCode::BackToRoot;
 
 			}
-			else if (pressCheckChoose(&retryButton)) {
+			else if (pressCheckChoose(retryButton)) {
 				mouse.changeToArrow();
 				return ExitCode::Play;
 			}
@@ -234,13 +234,13 @@ ExitCode mainMenu(RenderWindow& window, BG& background, GameCursor& mouse)
 		while (window.pollEvent(event)) {
 			eventHandler(event, window, mouse, buttons, oneSelected);
 
-			if (pressCheckChoose(&endlessButton) && not inOtherMenu)
+			if (pressCheckChoose(endlessButton) && not inOtherMenu)
 			{
 				mouse.changeToArrow();
 				return ExitCode::Play;
 			}
 
-			else if (pressCheckChoose(&settingsButton) && not inOtherMenu)
+			else if (pressCheckChoose(settingsButton) && not inOtherMenu)
 			{
 				inOtherMenu = true;
 				settingsButton.isSelected = false;
@@ -248,7 +248,7 @@ ExitCode mainMenu(RenderWindow& window, BG& background, GameCursor& mouse)
 				return ExitCode::Settings;
 			}
 
-			else if (pressCheckChoose(&exitButton) && not inOtherMenu)
+			else if (pressCheckChoose(exitButton) && not inOtherMenu)
 			{
 				window.close();
 			}
@@ -323,15 +323,15 @@ int main() {
 			break;
 		}
 		case ExitCode::Play:
-			if (difficultyMenu(window, mouse, background, parameters) == ExitCode::Play) {
+			while (difficultyMenu(window, mouse, background, parameters) == ExitCode::Play) {
 				switch (GameLoop(maxFPS, window, mouse, parameters)) {
 				case ExitCode::BackToRoot:
 					mouse.changeToArrow();
 					break;
 				case ExitCode::GameOver:
-					while (postGameScreen(window, background, mouse) == ExitCode::Play) {
-						GameLoop(maxFPS, window, mouse, parameters);
-					};
+					if (postGameScreen(window, background, mouse) == ExitCode::BackToRoot) {
+						return 1;
+					}
 					break;
 				}
 			}
@@ -342,6 +342,6 @@ int main() {
 		}
 	}
 
-	mouse.setColor(GameColor::White);
+	mouse.changeToArrow();
 	return 0;
 }
