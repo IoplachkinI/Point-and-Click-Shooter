@@ -337,11 +337,12 @@ public:
 		return bombradius;
 	}
 
-	void explosion(vector<shared_ptr<BasicTarget>>& targets) {
+	void explosion(vector<shared_ptr<BasicTarget>>& targets, long &score, int scorePerTarget) {
 		for (shared_ptr<BasicTarget>& target : targets) {
 			if (sqrt(pow(pos.x - target->getPos().x, 2) + pow(pos.y - target->getPos().y, 2)) <= this->bombradius && target->toDraw) {
 				target->toDraw = false;
 				target->destroyed = true;
+				score += scorePerTarget;
 			}
 		}
 	}
@@ -447,12 +448,14 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	int healProbability = (parameters["healProb"] == 0) ? 0 : 100 / parameters["healProb"];
 	int bombProbability = (parameters["bombProb"] == 0) ? 0 : 100 / parameters["bombProb"];
 	float speed = float(parameters["speed"] * -1.f);
-	int maxLives = 6;
+	int maxLives = 3;
 	int animationSwitchTime = 50; // milliseconds
 	int clickPeriod = 50; // milliseconds
+	int scorePerTarget = int(speed * -2.f) * parameters["accel"];
 
 	float interpValue = 0.f;
 	int lives = maxLives;
+	long score = 0;
 	float sizeCoeff = 20.f;
 	bool alreadyClicked = true; // if false - a click on a target will count and it being false represents an actual click
 
@@ -473,6 +476,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	vector <shared_ptr<BombTarget>> bombTargets;
 	vector <shared_ptr<DrawableObj>> drawables;
 
+	shared_ptr<Button> scoreButton = make_shared<Button>(window.getSize().x - 175.f, 40.f, 25, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "SCORE: ", window, defaultFont, false);
 	shared_ptr<BG> background = make_shared<BG>(float(window.getSize().x), float(window.getSize().y), window, "Bg6.jpg", sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(1242, 1242)));
 
 	drawables.push_back(background);
@@ -528,6 +532,8 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 		xColorSelector += window.getSize().x / sizeCoeff;
 		drawables.push_back(colorSelectors[i]);
 	}
+
+	drawables.push_back(scoreButton);
 
 	colorSelectors[0]->select();
 	mouse.setColor(GameColor::Red);
@@ -699,6 +705,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 					if (target->isHoveredOver(mouse) && target->compareColor(mouse.getColor()) && !alreadyClicked) {
 						target->toDraw = false;
 						target->destroyed = true;
+						score += scorePerTarget;
 					}
 				}
 			}
@@ -707,6 +714,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 				if (target->destroyed) {
 					target->heal(lives, maxLives);
 					target->destroyed = false;
+					score += scorePerTarget / 2;
 					for (int i = hearts.size() - 1; i >= 0; i--) {
 						if (hearts[i]->getStage() > 1 && !hearts[i]->toAnimateBackwards) {
 							hearts[i]->toAnimateBackwards = true;
@@ -723,8 +731,9 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 
 			for (auto& target : bombTargets) {
 				if (target->destroyed) {
-					target->explosion(targets);
+					target->explosion(targets, score, scorePerTarget);
 					target->destroyed = false;
+					score += scorePerTarget / 2;
 				}
 			}
 
@@ -784,6 +793,8 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 		for (auto& target : targets) {
 			target->setInterpValue(interpValue);
 		}
+
+		scoreButton->changeText("SCORE: " + to_string(score));
 
 		for (auto& object : drawables) {
 			object->drawObj();
