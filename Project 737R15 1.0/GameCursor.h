@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
 
 enum class GameColor {
 	Red,
@@ -22,7 +21,7 @@ class GameCursor
 		GameCursor();
 		void changeToHand();
 		void changeToArrow();
-		void setColor(GameColor color);
+		void setCursor(GameColor color);
 		sf::Cursor& getCursor();
 		sf::Vector2f getPos(sf::RenderWindow& window);
 		GameColor getColor();

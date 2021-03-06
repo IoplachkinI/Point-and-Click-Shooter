@@ -13,4 +13,7 @@ bool const pressCheckChoose(Button& button);
 
 bool const pressCheckMouse(Button& button, sf::Mouse::Button key);
 
-void sliderHandler(sf::RenderWindow& window, Button& button, std::vector<DrawableObj*>& drawables, std::string name, std::string unit, int changeTime, int& parameter, int lowerThreshold, int upperThreshold, int step);
+void sliderHandler(sf::RenderWindow& window, Button& button, std::vector<DrawableObj*>& drawables, std::string name, std::string unit, int changeTime, int& parameter, int lowerThreshold, 
+	int upperThreshold, int step);
+
+void rebind(sf::RenderWindow& window, Button& button, sf::Keyboard::Key& key, std::vector<DrawableObj*>& drawables, std::string name);

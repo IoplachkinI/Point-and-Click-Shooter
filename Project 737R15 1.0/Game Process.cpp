@@ -1,7 +1,7 @@
 #include "Game Process.h"
-#include <stdio.h>
+#include <cstdio>
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
 #include "BG.h"
 #include "GameCursor.h"
@@ -18,6 +18,7 @@ using namespace sf;
 
 extern const string defaultFont;
 extern const float tps = 20;
+extern const map<Keyboard::Key, string> keyToString;
 const double millisecPerTick = (double)1000/(double)tps;
 const int xSize = 10;
 const int ySize = 24;
@@ -337,7 +338,7 @@ public:
 		return bombradius;
 	}
 
-	void explosion(vector<shared_ptr<BasicTarget>>& targets, long &score, int scorePerTarget) {
+	void explosion(vector<shared_ptr<BasicTarget>>& targets, unsigned long long &score, int scorePerTarget) {
 		for (shared_ptr<BasicTarget>& target : targets) {
 			if (sqrt(pow(pos.x - target->getPos().x, 2) + pow(pos.y - target->getPos().y, 2)) <= this->bombradius && target->toDraw) {
 				target->toDraw = false;
@@ -436,26 +437,26 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 }
 
 
-ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, map<string, int>& parameters)
+ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, map<string, int>& parameters, map < string, Keyboard::Key > keys)
 {
 	int ticks = 0;
 	int frames = 0;
 	int fps = maxFPS;
 	int targetAmountCoeff = 2; // 100 / <this value> = actual amount of targets that can be on screen at once
 
-	int spawnProbability = int(tps) / parameters["spawnRate"] * 4;
+	int spawnProbability = int(tps) / parameters.at("spawnRate") * 4;
 	int minSpawnProbability = spawnProbability / 2;
-	int healProbability = (parameters["healProb"] == 0) ? 0 : 100 / parameters["healProb"];
-	int bombProbability = (parameters["bombProb"] == 0) ? 0 : 100 / parameters["bombProb"];
-	float speed = float(parameters["speed"] * -1.f);
+	int healProbability = (parameters.at("healProb") == 0) ? 0 : 100 / parameters.at("healProb");
+	int bombProbability = (parameters.at("bombProb") == 0) ? 0 : 100 / parameters.at("bombProb");
+	float speed = float(parameters.at("speed") * -1.f);
 	int maxLives = 3;
 	int animationSwitchTime = 50; // milliseconds
 	int clickPeriod = 50; // milliseconds
-	int scorePerTarget = int(speed * -2.f) * parameters["accel"];
+	int scorePerTarget = int(speed * -2.f) * parameters.at("accel");
 
 	float interpValue = 0.f;
 	int lives = maxLives;
-	long score = 0;
+	unsigned long long score = 0;
 	float sizeCoeff = 20.f;
 	bool alreadyClicked = true; // if false - a click on a target will count and it being false represents an actual click
 
@@ -495,7 +496,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 		xHeart = float(window.getSize().x) / 2.f - (lives / 2) * (float(window.getSize().x) / sizeCoeff);
 	}
 
-	for (int i = 0; i < (100 - parameters["healProb"] - parameters["bombProb"]) / targetAmountCoeff; i++) {
+	for (int i = 0; i < (100 - parameters.at("healProb") - parameters.at("bombProb")) / targetAmountCoeff; i++) {
 		float radius = float(window.getSize().x) / 15.f;
 		shared_ptr<BasicTarget> newTarget = make_shared<BasicTarget>(radius, (rand() % (window.getSize().x - 2 * int(radius))) + radius, window.getSize().y + (rand() % long(radius)) + radius,
 			"targets.png", window, colors[rand() % colors.size()]);
@@ -503,7 +504,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 		targets[i]->toDraw = false;
 	}
 
-	for (int i = 0; i < parameters["healProb"] / targetAmountCoeff; i++) {
+	for (int i = 0; i < parameters.at("healProb") / targetAmountCoeff; i++) {
 		float radius = float(window.getSize().x) / 15.f;
 		shared_ptr<HealTarget> newTarget = make_shared<HealTarget>(radius, (rand() % (window.getSize().x - 2 * int(radius))) + radius, window.getSize().y + (rand() % long(radius)) + radius, 1,
 			"heal_targets.png", window, colors[rand() % colors.size()]);
@@ -512,7 +513,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 		healTargets.push_back(newTarget);
 	}
 
-	for (int i = 0; i < parameters["bombProb"] / targetAmountCoeff; i++) {
+	for (int i = 0; i < parameters.at("bombProb") / targetAmountCoeff; i++) {
 		float radius = float(window.getSize().x) / 15.f;
 		shared_ptr<BombTarget> newTarget = make_shared<BombTarget>(radius, (rand() % (window.getSize().x - 2 * int(radius))) + radius, window.getSize().y + (rand() % long(radius)) + radius,
 			"bomb_targets.png", window, colors[rand() % colors.size()], 400);
@@ -536,7 +537,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	drawables.push_back(scoreButton);
 
 	colorSelectors[0]->select();
-	mouse.setColor(GameColor::Red);
+	mouse.setCursor(GameColor::Red);
 	window.setMouseCursorVisible(true);
 
 	for (int i = 0; i < lives; i++) {
@@ -562,6 +563,12 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 				case Event::Closed:
 					window.close();
 					break;
+				case Event::MouseLeft:
+					mouse.changeToArrow();
+					break;
+				case Event::MouseEntered:
+					mouse.setCursor(mouse.getColor());
+					break;
 				case Event::LostFocus: {
 					mouse.changeToArrow();
 
@@ -571,40 +578,34 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 					if (pauseMenu(window, drawables, mouse) == ExitCode::BackToRoot) {
 						return ExitCode::BackToRoot;
 					}
-					GameColor selectedColor = GameColor::Red;
+					
+					mouse.setCursor(mouse.getColor());
 
-					for (auto& selector : colorSelectors) {
-						if (selector->getIsSelected()) {
-							GameColor selectedColor = selector->getColor();
-							break;
-						}
-					}
 					now = std::chrono::duration_cast<std::chrono::milliseconds>
 						(std::chrono::steady_clock::now().time_since_epoch()).count();
-					mouse.setColor(selectedColor);
 					cycleStartTime = now;
 					lastNow = now - lastNowDiff;
 					lastTimer = now - lastTimerDiff;
 					break;
 				}
 				case Event::KeyPressed:
-					if (Keyboard::isKeyPressed(Keyboard::Num1) || Keyboard::isKeyPressed(Keyboard::Z)) {
-						mouse.setColor(GameColor::Red);
+					if (Keyboard::isKeyPressed(keys.at("red")) || Keyboard::isKeyPressed(Keyboard::Num1)) {
+						mouse.setCursor(GameColor::Red);
 						colorSelectors[0]->select();
 						deselectOthers(colorSelectors, 0);
 					}
-					if (Keyboard::isKeyPressed(Keyboard::Num2) || Keyboard::isKeyPressed(Keyboard::X)) {
-						mouse.setColor(GameColor::Blue);
+					if (Keyboard::isKeyPressed(keys.at("blue")) || Keyboard::isKeyPressed(Keyboard::Num2)) {
+						mouse.setCursor(GameColor::Blue);
 						colorSelectors[1]->select();
 						deselectOthers(colorSelectors, 1);
 					}
-					if(Keyboard::isKeyPressed(Keyboard::Num3) || Keyboard::isKeyPressed(Keyboard::C)) {
-						mouse.setColor(GameColor::Green);
+					if(Keyboard::isKeyPressed(keys.at("green")) || Keyboard::isKeyPressed(Keyboard::Num3)) {
+						mouse.setCursor(GameColor::Green);
 						colorSelectors[2]->select();
 						deselectOthers(colorSelectors, 2);
 					}
-					if (Keyboard::isKeyPressed(Keyboard::Num4) || Keyboard::isKeyPressed(Keyboard::V)) {
-						mouse.setColor(GameColor::Yellow);
+					if (Keyboard::isKeyPressed(keys.at("yellow")) || Keyboard::isKeyPressed(Keyboard::Num4)) {
+						mouse.setCursor(GameColor::Yellow);
 						colorSelectors[3]->select();
 						deselectOthers(colorSelectors, 3);
 					}
@@ -618,18 +619,10 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 							return ExitCode::BackToRoot;
 						}
 
-						GameColor selectedColor = GameColor::Red;
-
-						for (auto& selector : colorSelectors) {
-							if (selector->getIsSelected()) {
-								GameColor selectedColor = selector->getColor();
-								break;
-							}
-						}
+						mouse.setCursor(mouse.getColor());
 
 						now = std::chrono::duration_cast<std::chrono::milliseconds>
 							(std::chrono::steady_clock::now().time_since_epoch()).count();
-						mouse.setColor(selectedColor);
 						cycleStartTime = now;
 						lastNow = now - lastNowDiff;
 						lastTimer = now - lastTimerDiff;
@@ -737,7 +730,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 				}
 			}
 
-			speed -= float(0.01 * float(parameters["accel"])); //this increases speed
+			speed -= float(0.01 * float(parameters.at("accel"))); //this increases speed
 			interpValue = 0.0;
 			lastNow = now;
 		}
@@ -803,7 +796,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 		window.display();
 	}
 
-	mouse.setColor(GameColor::White);
+	mouse.setCursor(GameColor::White);
 	return ExitCode::BackToRoot;
 }
 

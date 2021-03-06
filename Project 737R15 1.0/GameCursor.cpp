@@ -15,7 +15,7 @@ void GameCursor::changeToArrow() {
 	cursor.loadFromSystem(sf::Cursor::Arrow);
 }
 
-void GameCursor::setColor(GameColor color) {
+void GameCursor::setCursor(GameColor color) {
 	this->color = color;
 	sf::Image texture;
 	switch (color) {

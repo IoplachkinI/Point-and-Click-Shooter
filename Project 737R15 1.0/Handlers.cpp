@@ -1,5 +1,9 @@
 #include "Handlers.h"
 
+
+extern const std::map<sf::Keyboard::Key, std::string> keyToString;
+
+
 int eventHandler(sf::Event& event, sf::RenderWindow& window, GameCursor& mouse, std::vector <Button*>& buttons, bool& oneSelected)
 {
 
@@ -106,6 +110,34 @@ bool const pressCheckMouse(Button& button, sf::Mouse::Button key)
 		return true;
 	}
 	return false;
+}
+
+void rebind (sf::RenderWindow& window, Button& button, sf::Keyboard::Key& key, std::vector<DrawableObj*>& drawables, std::string name){
+
+	button.changeText(name + "???");
+
+	sf::Event event;
+
+	while (true) {
+		while (window.pollEvent(event)) {
+			if (event.type == sf::Event::KeyPressed) {
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+					return;
+				}
+				else {
+					key = event.key.code;
+					button.changeText(name + (keyToString.at(event.key.code)));
+					return;
+				}
+			}
+		}
+
+		for (auto& drawable : drawables) {
+			drawable->drawObj();
+		}
+		window.display();
+
+	}
 }
 
 void sliderHandler(sf::RenderWindow& window, Button& button, std::vector<DrawableObj*>& drawables, std::string name, std::string unit, int changeTime, int& parameter, int lowerThreshold, int upperThreshold, int step) {

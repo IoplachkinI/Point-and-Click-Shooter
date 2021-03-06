@@ -7,4 +7,4 @@
 #include "BG.h"
 
 
-ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, std::map<std::string, int>& parameters);
+ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, std::map<std::string, int>& parameters, std::map<std::string, sf::Keyboard::Key> keys);
