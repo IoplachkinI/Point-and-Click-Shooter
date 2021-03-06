@@ -306,6 +306,8 @@ int main() {
 		MainMusic.setVolume(float(curMusicVolume));
 	}
 
+	bool exit = false;
+
 	while (true)
 	{
 		switch (mainMenu(window, background, mouse)) {
@@ -323,17 +325,20 @@ int main() {
 			break;
 		}
 		case ExitCode::Play:
-			while (difficultyMenu(window, mouse, background, parameters) == ExitCode::Play) {
-				switch (GameLoop(maxFPS, window, mouse, parameters)) {
-				case ExitCode::BackToRoot:
-					mouse.changeToArrow();
-					break;
-				case ExitCode::GameOver:
-					if (postGameScreen(window, background, mouse) == ExitCode::BackToRoot) {
-						return 1;
+			exit = false;
+
+			while (!exit && difficultyMenu(window, mouse, background, parameters) == ExitCode::Play) {
+					switch (GameLoop(maxFPS, window, mouse, parameters)) {
+					case ExitCode::BackToRoot:
+						mouse.changeToArrow();
+						exit = true;
+						break;
+					case ExitCode::GameOver:
+						if (postGameScreen(window, background, mouse) == ExitCode::BackToRoot) {
+							exit = true;
+						}
+						break;
 					}
-					break;
-				}
 			}
 			break;
 

@@ -447,7 +447,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	int healProbability = (parameters["healProb"] == 0) ? 0 : 100 / parameters["healProb"];
 	int bombProbability = (parameters["bombProb"] == 0) ? 0 : 100 / parameters["bombProb"];
 	float speed = float(parameters["speed"] * -1.f);
-	int maxLives = 3;
+	int maxLives = 6;
 	int animationSwitchTime = 50; // milliseconds
 	int clickPeriod = 50; // milliseconds
 
