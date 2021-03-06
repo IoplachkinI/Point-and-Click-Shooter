@@ -296,6 +296,27 @@ public:
 		return (sqrt(pow(pos.x - mouse.getPos(window).x, 2) + pow(pos.y - mouse.getPos(window).y, 2)) <= object.getRadius());
 	}
 
+
+	void setPosRand(vector<shared_ptr<BasicTarget>>& targets, int recursionAmount) {
+		if (recursionAmount < 10) {
+			float assumedX = float(rand() % (window.getSize().x - 2 * int(getRadius())) + getRadius());
+			float assumedY = float(window.getSize().y + (rand() % int(object.getRadius())) + object.getRadius());
+			for (auto& target : targets) {
+				if (target->toDraw && float(sqrt(pow(assumedX - target->getPos().x, 2) + pow(assumedY - target->getPos().y, 2))) <= 2.f * object.getRadius()) {
+					recursionAmount++;
+					setPosRand(targets, recursionAmount);
+					return;
+				}
+			}
+
+			setPos(assumedX, assumedY);
+		}
+		else {
+			toDraw = false;
+		}
+		return;
+	}
+
 };
 
 
@@ -373,8 +394,8 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 	bool oneSelected = false;
 
 	vector <Button*> buttons;
-	Button continueButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f - 50.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "CONTINUE", window, defaultFont, true);
-	Button exitButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f + 50.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "EXIT", window, defaultFont, true);
+	Button continueButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "CONTINUE", window, defaultFont, true);
+	Button exitButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f + 100.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "EXIT", window, defaultFont, true);
 	buttons.push_back(&exitButton);
 	buttons.push_back(&continueButton);
 
@@ -401,7 +422,7 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 			drawables[i]->drawObj();
 		}
 
-		for (auto button : buttons) {
+		for (auto& button : buttons) {
 			button->drawObj();
 		}
 
@@ -414,17 +435,12 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 }
 
 
-/*float const getRandXposition (vector<shared_ptr<BasicTarget>>& targets, shared_ptr<BasicTarget> target, RenderWindow& window)  {
-	float assumedX = float(rand() % (window.getSize().x - 2 * int(target->getRadius())) + target->getRadius());
-}*/
-
-
 ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, map<string, int>& parameters)
 {
 	int ticks = 0;
 	int frames = 0;
 	int fps = maxFPS;
-	int targetAmountCoeff = 5; // 100 / <this value> = actual amount of targets that can be on screen at once
+	int targetAmountCoeff = 2; // 100 / <this value> = actual amount of targets that can be on screen at once
 
 	int spawnProbability = int(tps) / parameters["spawnRate"] * 4;
 	int minSpawnProbability = spawnProbability / 2;
@@ -502,6 +518,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	}
 
 	for (int i = 0; i < int(targets.size()); i++) {
+		targets[i]->setPosRand(targets, 0);
 		drawables.push_back(targets[i]);
 	}
 
@@ -550,7 +567,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 					}
 					GameColor selectedColor = GameColor::Red;
 
-					for (auto selector : colorSelectors) {
+					for (auto& selector : colorSelectors) {
 						if (selector->getIsSelected()) {
 							GameColor selectedColor = selector->getColor();
 							break;
@@ -597,7 +614,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 
 						GameColor selectedColor = GameColor::Red;
 
-						for (auto selector : colorSelectors) {
+						for (auto& selector : colorSelectors) {
 							if (selector->getIsSelected()) {
 								GameColor selectedColor = selector->getColor();
 								break;
@@ -631,10 +648,10 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 
 					while (true) {
 						if (!target->toDraw) {
-							target->setColor(colors[rand() % colors.size()]);
-							target->setPos(float(rand() % (window.getSize().x - 2 * int(target->getRadius())) + target->getRadius()), window.getSize().y + (rand() % 4 * long(target->getRadius())) + target->getRadius());
 							target->toDraw = true;
 							target->destroyed = false;
+							target->setColor(colors[rand() % colors.size()]);
+							target->setPosRand(targets, 0);
 
 							if (rand() % 5 == 0 && spawnProbability >= minSpawnProbability) {
 								spawnProbability--; //this increases the spawn rate
@@ -651,7 +668,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 
 			ticks++;
 
-			for (auto target : targets) {
+			for (auto& target : targets) {
 				if (target->toDraw) {
 					if (target->getPos().y < -(target->getRadius())) {
 						target->toDraw = false; // a target goes out of bounds and becomes available for a respawn
@@ -686,7 +703,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 				}
 			}
 
-			for (auto target : healTargets) {
+			for (auto& target : healTargets) {
 				if (target->destroyed) {
 					target->heal(lives, maxLives);
 					target->destroyed = false;
@@ -704,14 +721,14 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 				}
 			}
 
-			for (auto target : bombTargets) {
+			for (auto& target : bombTargets) {
 				if (target->destroyed) {
 					target->explosion(targets);
 					target->destroyed = false;
 				}
 			}
 
-			speed -= 0.01 * float(parameters["accel"]); //this increases speed
+			speed -= float(0.01 * float(parameters["accel"])); //this increases speed
 			interpValue = 0.0;
 			lastNow = now;
 		}
@@ -764,11 +781,11 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 			}
 		}
 
-		for (auto target : targets) {
+		for (auto& target : targets) {
 			target->setInterpValue(interpValue);
 		}
 
-		for (auto object : drawables) {
+		for (auto& object : drawables) {
 			object->drawObj();
 		}
 
