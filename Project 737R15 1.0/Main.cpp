@@ -167,18 +167,18 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 	bool oneClicked = false;
 	int ChangeTime = MaxChangeSpeed;
 	int timePassed = 0;
-	bool waitingForInput = false;
+	bool escapeAlreadyPressed = false;
 	int rebindedKey = -1; //leftKey = 0, rightKey = 1, speedUpKey = 2, rotateKey = 3
 	vector <Button*> buttons;
 
 	//Button volumeButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f + 100.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "MUSIC VOLUME " + to_string(musicVolume), window, defaultFont, true);
-	Button applyButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 150.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "APPLY", window, defaultFont, true);
-	Button backButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 50.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "BACK", window, defaultFont, true);
+	//Button applyButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 150.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "APPLY", window, defaultFont, true);
+	Button backButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 75.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "BACK", window, defaultFont, true);
 	Button redButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f + 100.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), 
 		"RED COLOR: " + (keyToString.at(keys.at("red"))), window, defaultFont, true);
 
 	buttons.push_back(&backButton);
-	buttons.push_back(&applyButton);
+	//buttons.push_back(&applyButton);
 	buttons.push_back(&redButton);
 	//buttons.push_back(&volumeButton);
 
@@ -196,53 +196,34 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 
 		while (window.pollEvent(event)) 
 		{
-			/*if (waitingForInput && event.type == Event::KeyPressed) {
-				switch (rebindedKey) {
-					case 0 :
-						leftKey = event.key.code;
-						leftKeyButton.changeText("MOVE LEFT KEY: " + to_string(event.key.code));
-						cout << "CHANGED" << to_string(event.key.code) << endl;
-						break;
-					case 1:
-						rightKey = event.key.code;
-						break;
-					case 2:
-						speedUpKey = event.key.code;
-						break;
-					case 3:
-						rotateKey = event.key.code;
-						break;
-					default:
-						continue;
-				}
-				rebindedKey = -1;
-			}*/
+			switch (event.type) {
+				case Event::KeyReleased:
+					if (escapeAlreadyPressed && !Keyboard::isKeyPressed(Keyboard::Escape)) {
+						escapeAlreadyPressed = false;
+					}
+					break;
+			}
+
+			if (pressCheckChoose(backButton, mouse))
+			{
+				mouse.changeToArrow();
+				return ExitCode::BackToRoot;
+			}
+
+			else if (pressCheckChoose(redButton, mouse)) {
+				rebind(window, redButton, keys.at("red"), mouse, drawables, "RED COLOR: ", escapeAlreadyPressed);
+				redButton.isSelected = false;
+				oneSelected = false;
+				mouse.changeToArrow();
+			}
+
+			if (Keyboard::isKeyPressed(Keyboard::Escape) && !escapeAlreadyPressed)
+			{
+				mouse.changeToArrow();
+				return ExitCode::BackToRoot;
+			}
 
 			eventHandler(event, window, mouse, buttons, oneSelected);
-
-			//sliderHandler(window, volumeButton, drawables, "MUSIC VOLUME ", "", 30, musicVolume, 0, 100, 1);
-
-			if (pressCheckChoose(applyButton)) {
-				mouse.changeToArrow();
-				return ExitCode::Stay;
-			}
-
-			else if (pressCheckChoose(backButton))
-			{
-				backButton.isSelected = false;
-				mouse.changeToArrow();
-				return ExitCode::BackToRoot;
-			}
-
-			else if (pressCheckChoose(redButton)) {
-				rebind(window, redButton, keys.at("red"), drawables, "RED COLOR: ");
-			}
-
-			if (Keyboard::isKeyPressed(Keyboard::Escape))
-			{
-				mouse.changeToArrow();
-				return ExitCode::BackToRoot;
-			}
 		}
 
 		window.setMouseCursor(mouse.getCursor());
@@ -250,7 +231,7 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 		timePassed = 0;
 		oneClicked = false;
 
-		redButton.changeText("RED COLOR: " + keys.at("red"));
+		redButton.changeText("RED COLOR: " + keyToString.at(keys.at("red")));
 
 		for (DrawableObj* obj : drawables) {
 			obj->drawObj();
@@ -289,18 +270,18 @@ ExitCode postGameScreen(RenderWindow& window, BG& background, GameCursor& mouse)
 		window.clear(Color(0, 0, 0));
 
 		while (window.pollEvent(event)) {
-			eventHandler(event, window, mouse, buttons, oneSelected);
-
-			if (pressCheckChoose(mainMenuButton))
+			if (pressCheckChoose(mainMenuButton, mouse))
 			{
 				mouse.changeToArrow();
 				return ExitCode::BackToRoot;
 
 			}
-			else if (pressCheckChoose(retryButton)) {
+			else if (pressCheckChoose(retryButton, mouse)) {
 				mouse.changeToArrow();
 				return ExitCode::Play;
 			}
+
+			eventHandler(event, window, mouse, buttons, oneSelected);
 		}
 
 		window.setMouseCursor(mouse.getCursor());
@@ -344,15 +325,14 @@ ExitCode mainMenu(RenderWindow& window, BG& background, GameCursor& mouse)
 		window.clear(Color(0, 0, 0));
 
 		while (window.pollEvent(event)) {
-			eventHandler(event, window, mouse, buttons, oneSelected);
 
-			if (pressCheckChoose(endlessButton) && not inOtherMenu)
+			if (pressCheckChoose(endlessButton, mouse) && not inOtherMenu)
 			{
 				mouse.changeToArrow();
 				return ExitCode::Play;
 			}
 
-			else if (pressCheckChoose(settingsButton) && not inOtherMenu)
+			else if (pressCheckChoose(settingsButton, mouse) && not inOtherMenu)
 			{
 				inOtherMenu = true;
 				settingsButton.isSelected = false;
@@ -360,10 +340,12 @@ ExitCode mainMenu(RenderWindow& window, BG& background, GameCursor& mouse)
 				return ExitCode::Settings;
 			}
 
-			else if (pressCheckChoose(exitButton) && not inOtherMenu)
+			else if (pressCheckChoose(exitButton, mouse) && not inOtherMenu)
 			{
 				window.close();
 			}
+
+			eventHandler(event, window, mouse, buttons, oneSelected);
 		}
 
 		window.setMouseCursor(mouse.getCursor());
@@ -409,15 +391,6 @@ int main() {
 
 	GameCursor mouse;
 
-	Music MainMusic;
-
-	if (MainMusic.openFromFile("Main Theme.ogg"))
-	{
-		MainMusic.play();
-		MainMusic.setVolume(1);
-		MainMusic.setVolume(float(curMusicVolume));
-	}
-
 	bool exit = false;
 
 	while (true)
@@ -427,29 +400,26 @@ int main() {
 			return 0;
 
 		case ExitCode::Settings:
-		{	
-			while (settings(window, background, mouse, musicVolume, keys) == ExitCode::Stay) {
-				curMusicVolume = musicVolume;
-				MainMusic.setVolume(float(curMusicVolume));
-			}
-			 
-			musicVolume = curMusicVolume;
+		{
+			mouse.LMBalreadyPressed = true;
+			settings(window, background, mouse, musicVolume, keys);
 			break;
 		}
 		case ExitCode::Play:
 			exit = false;
 
 			while (!exit && difficultyMenu(window, mouse, background, parameters) == ExitCode::Play) {
+				mouse.LMBalreadyPressed = false;
 					switch (GameLoop(maxFPS, window, mouse, parameters, keys)) {
-					case ExitCode::BackToRoot:
-						mouse.changeToArrow();
-						exit = true;
-						break;
-					case ExitCode::GameOver:
-						if (postGameScreen(window, background, mouse) == ExitCode::BackToRoot) {
+						case ExitCode::BackToRoot:
+							mouse.changeToArrow();
 							exit = true;
-						}
-						break;
+							break;
+						case ExitCode::GameOver:
+							if (postGameScreen(window, background, mouse) == ExitCode::BackToRoot) {
+								exit = true;
+							}
+							break;
 					}
 			}
 			break;

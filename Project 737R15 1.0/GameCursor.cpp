@@ -5,6 +5,7 @@ GameCursor::GameCursor() {
 	cursor.loadFromSystem(sf::Cursor::Arrow);
 	color = GameColor::White;
 	size = 26;
+	LMBalreadyPressed = false;
 }
 
 void GameCursor::changeToHand() {

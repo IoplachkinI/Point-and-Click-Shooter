@@ -17,7 +17,7 @@ ExitCode difficultyMenu(RenderWindow& window, GameCursor& mouse, BG& bg, map<str
 
 	vector <Button*> buttons;
 
-	Button backButton (float(window.getSize().x) / 2.f, float(window.getSize().y) - 50.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "BACK", window, defaultFont, true);
+	Button backButton (float(window.getSize().x) / 2.f, float(window.getSize().y) - 75.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "BACK", window, defaultFont, true);
 	Button playButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 150.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "PLAY", window, defaultFont, true);
 	Button randButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 225.f, 20, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "RANDOMIZE", window, defaultFont, true);
 	Button accelButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f - 250.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255),
@@ -55,24 +55,20 @@ ExitCode difficultyMenu(RenderWindow& window, GameCursor& mouse, BG& bg, map<str
 		window.clear(Color(0, 0, 0));
 
 		while (window.pollEvent(event)) {
-			eventHandler(event, window, mouse, buttons, oneSelected);
 			switch (event.type) {
 				case Event::KeyPressed:
 					if (Keyboard::isKeyPressed(Keyboard::Escape)) {
-						for (int i = 0; i < int(drawables.size()); i++) {
-							delete drawables[i];
-						}
 						return ExitCode::BackToRoot;
 					}
 			}
 
-			if (pressCheckChoose(backButton)) {
+			if (pressCheckChoose(backButton, mouse)) {
 				return ExitCode::BackToRoot;
 			}
-			else if (pressCheckChoose(playButton)){
+			else if (pressCheckChoose(playButton, mouse)){
 				return ExitCode::Play;
 			}
-			else if (pressCheckChoose(randButton)) {
+			else if (pressCheckChoose(randButton, mouse)) {
 				parameters.at("healProb") = (rand() % 21) * 5;
 				parameters.at("bombProb") = (rand() % (21 - parameters.at("healProb") / 5)) * 5;
 				parameters.at("spawnRate") = (rand() % 20) + 1;
@@ -92,6 +88,7 @@ ExitCode difficultyMenu(RenderWindow& window, GameCursor& mouse, BG& bg, map<str
 				sliderHandler(window, speedButton, drawables, "SPEED ", "", 30, parameters.at("speed"), 5, 50, 1);
 				sliderHandler(window, accelButton, drawables, "ACCELERATION ", "", 30, parameters.at("accel"), 0, 10, 1);
 			}
+			eventHandler(event, window, mouse, buttons, oneSelected);
 		}
 
 		window.setMouseCursor(mouse.getCursor());

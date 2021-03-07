@@ -18,6 +18,7 @@ class GameCursor
 		int size;
 
 	public:
+		bool LMBalreadyPressed;
 		GameCursor();
 		void changeToHand();
 		void changeToArrow();

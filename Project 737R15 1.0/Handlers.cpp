@@ -4,7 +4,7 @@
 extern const std::map<sf::Keyboard::Key, std::string> keyToString;
 
 
-int eventHandler(sf::Event& event, sf::RenderWindow& window, GameCursor& mouse, std::vector <Button*>& buttons, bool& oneSelected)
+int eventHandler(sf::Event& event, sf::RenderWindow& window, GameCursor& mouse, std::vector <Button*>& buttons, bool& oneSelected) //ALWAYS PUT LAST IN EVENT CHECKING CYCLE
 {
 
 	switch (event.type)
@@ -15,6 +15,18 @@ int eventHandler(sf::Event& event, sf::RenderWindow& window, GameCursor& mouse, 
 		window.close();
 	};
 	break;
+
+	case sf::Event::MouseButtonReleased: {
+		if (mouse.LMBalreadyPressed && !sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+			mouse.LMBalreadyPressed = false;
+		}
+	}
+
+	case sf::Event::MouseButtonPressed: {
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+			mouse.LMBalreadyPressed = true;
+		}
+	}
 
 	case sf::Event::MouseMoved: {
 		oneSelected = false;
@@ -91,12 +103,14 @@ bool const pressCheck(Button& button, sf::Keyboard::Key key)
 
 }
 
-bool const pressCheckChoose(Button& button)
+bool const pressCheckChoose(Button& button, GameCursor& mouse)
 {
 	if (button.isSelected &&
 		(sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) ||
-			sf::Mouse::isButtonPressed(sf::Mouse::Left)))
+			(sf::Mouse::isButtonPressed(sf::Mouse::Left) &&
+			!mouse.LMBalreadyPressed)))
 	{
+		mouse.LMBalreadyPressed = true;
 		return true;
 	}
 	return false;
@@ -112,7 +126,7 @@ bool const pressCheckMouse(Button& button, sf::Mouse::Button key)
 	return false;
 }
 
-void rebind (sf::RenderWindow& window, Button& button, sf::Keyboard::Key& key, std::vector<DrawableObj*>& drawables, std::string name){
+void rebind (sf::RenderWindow& window, Button& button, sf::Keyboard::Key& key, GameCursor& mouse, std::vector<DrawableObj*>& drawables, std::string name, bool& escapePressed){
 
 	button.changeText(name + "???");
 
@@ -120,15 +134,23 @@ void rebind (sf::RenderWindow& window, Button& button, sf::Keyboard::Key& key, s
 
 	while (true) {
 		while (window.pollEvent(event)) {
-			if (event.type == sf::Event::KeyPressed) {
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-					return;
-				}
-				else {
-					key = event.key.code;
-					button.changeText(name + (keyToString.at(event.key.code)));
-					return;
-				}
+			switch (event.type) {
+				case sf::Event::KeyPressed:
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+						escapePressed = true;
+						//button.changeText(name + keyToString.at(key));
+						return;
+					}
+					else {
+						key = event.key.code;
+						button.changeText(name + (keyToString.at(key)));
+						return;
+					}
+					break;
+				case sf::Event::MouseButtonReleased:
+					if (mouse.LMBalreadyPressed && !sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+						mouse.LMBalreadyPressed = false;
+					}
 			}
 		}
 

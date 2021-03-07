@@ -408,16 +408,17 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 		window.clear(Color(255, 255, 255));
 
 		while (window.pollEvent(event)) {
-			eventHandler(event, window, mouse, buttons, oneSelected);
 
-			if (pressCheckChoose(exitButton)) {
+			if (pressCheckChoose(exitButton, mouse)) {
 				mouse.changeToArrow();
 				return ExitCode::BackToRoot;
 			}
-			else if (pressCheckChoose(continueButton)) {
+			else if (pressCheckChoose(continueButton, mouse)) {
 				mouse.changeToArrow();
 				return ExitCode::Play;
 			}
+
+			eventHandler(event, window, mouse, buttons, oneSelected);
 		}
 
 		for (int i = 0; i < int(drawables.size()); i++) {
@@ -437,7 +438,7 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 }
 
 
-ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, map<string, int>& parameters, map < string, Keyboard::Key > keys)
+ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, map<string, int>& parameters, map <string, Keyboard::Key> keys)
 {
 	int ticks = 0;
 	int frames = 0;
