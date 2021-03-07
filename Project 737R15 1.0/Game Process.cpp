@@ -269,14 +269,12 @@ public:
 
 	void setPos(Vector2f newPos) {
 		object.setPosition(newPos);
-		object.setOrigin(object.getRadius(), object.getRadius());
 		prevPos = pos;
 		pos = newPos;
 	}
 
 	void setPos(float x, float y) {
 		object.setPosition(Vector2f(x, y));
-		object.setOrigin(object.getRadius(), object.getRadius());
 		prevPos = pos;
 		pos = Vector2f(x, y);
 	}
@@ -329,7 +327,8 @@ private:
 	Sprite sprite;
 public:
 
-	long long animatetimer;
+	long long lastAnimationTime;
+	bool toAnimate;
 
 	BombTarget(float r, float x, float y, string fileName, string explosionFileName, RenderWindow& w, GameColor color, int Bombradius) :
 		BasicTarget(r, x, y, fileName, w, color), 
@@ -338,17 +337,62 @@ public:
 		if (!explosionTexture.loadFromFile(explosionFileName)) {
 			throw logic_error("Couldn't load texture");
 		}
-
-		animatetimer = 0;
-		sprite = Sprite(explosionTexture, IntRect(Vector2i(0, 0), Vector2i(int(double(bombradius) * sqrt(2)), int(double(bombradius) * sqrt(2)))));
+		texture.setSmooth(false);
+		lastAnimationTime = 0;
+		toAnimate = false;
+		stage = 0;
+		sprite = Sprite(explosionTexture);
+		sprite.setOrigin(Vector2f(23.5, 21.5));
+		sprite.setScale(float(2 * double(bombradius) / sqrt(2) / 47.0), float(2 * double(bombradius) / sqrt(2) / 43.0));
 	}
 
 	int getbombradius() {
 		return bombradius;
 	}
 	
+	void setSpritePos(Vector2f newPos) {
+		sprite.setPosition(newPos);
+	}
+
+	bool animate() {
+		switch (stage) {
+		case 0:
+			sprite.setTextureRect(IntRect(0, 0, 47, 43));
+			stage = 1;
+			break;
+		case 1:
+			sprite.setTextureRect(IntRect(47, 0, 47, 43));
+			stage = 2;
+			break;
+		case 2:
+			sprite.setTextureRect(IntRect(94, 0, 47, 43));
+			stage = 3;
+			break;
+		case 3:
+			sprite.setTextureRect(IntRect(141, 0, 47, 43));
+			stage = 4;
+			break;
+		case 4:
+			sprite.setTextureRect(IntRect(188, 0, 47, 43));
+			stage = 5;
+			break;
+		case 5:
+			sprite.setTextureRect(IntRect(235, 0, 47, 43));
+			stage = 0;
+			return true;
+		default:
+			throw logic_error("Wrong stage! ");
+		}
+
+		return false;
+}
+
 	void drawSprite() {
 		window.draw(sprite);
+	}
+
+	Vector2f getSpritePos() {
+		return sprite.getPosition();
 	}
 
 	void explosion(vector<shared_ptr<BasicTarget>>& targets, unsigned long long &score, int scorePerTarget) {
@@ -528,7 +572,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	for (int i = 0; i < parameters.at("bombProb") / targetAmountCoeff; i++) {
 		float radius = float(window.getSize().x) / 15.f;
 		shared_ptr<BombTarget> newTarget = make_shared<BombTarget>(radius, (rand() % (window.getSize().x - 2 * int(radius))) + radius, window.getSize().y + (rand() % long(radius)) + radius,
-			"bomb_targets.png", "explosion.png", window, colors[rand() % colors.size()], 400);
+			"bomb_targets.png", "explosion.png", window, colors[rand() % colors.size()], 200);
 		newTarget->toDraw = false;
 		targets.push_back(newTarget);
 		bombTargets.push_back(newTarget);
@@ -690,7 +734,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 									hearts[i]->toAnimateBackwards = false;
 									hearts[i]->toAnimate = true;
 									hearts[i]->lastAnimationTime = now;
-									if (hearts[i]->animate() == 1) {
+									if (hearts[i]->animate()) {
 										hearts[i]->toAnimate = false;
 									}
 									break;
@@ -725,7 +769,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 							hearts[i]->toAnimateBackwards = true;
 							hearts[i]->toAnimate = false;
 							hearts[i]->lastAnimationTime = now;
-							if (hearts[i]->animateBackwards() == 1) {
+							if (hearts[i]->animateBackwards()) {
 								hearts[i]->toAnimateBackwards = false;
 							}
 							break;
@@ -738,7 +782,14 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 				if (target->destroyed) {
 					target->explosion(targets, score, scorePerTarget);
 					target->destroyed = false;
+					target->toAnimate = true;
+					target->setSpritePos(target->getPos());
+					target->animate();
+					target->lastAnimationTime = now;
 					score += scorePerTarget / 2;
+				}
+				if (target->toAnimate) {
+					target->setSpritePos(target->getSpritePos() + Vector2f(0.f, speed));
 				}
 			}
 
@@ -780,7 +831,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 		for (int i = 0; i < int(hearts.size()); i++) {
 			if (hearts[i]->toAnimate && now - hearts[i]->lastAnimationTime >= animationSwitchTime) {
 				hearts[i]->lastAnimationTime = now;
-				if (hearts[i]->animate() == 1) {
+				if (hearts[i]->animate()) {
 					hearts[i]->toAnimate = false;
 				}
 			}
@@ -789,8 +840,17 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 		for (int i = hearts.size() - 1; i >= 0; i--) {
 			if (hearts[i]->toAnimateBackwards && now - hearts[i]->lastAnimationTime >= animationSwitchTime) {
 				hearts[i]->lastAnimationTime = now;
-				if (hearts[i]->animateBackwards() == 1) {
+				if (hearts[i]->animateBackwards()) {
 					hearts[i]->toAnimateBackwards = false;
+				}
+			}
+		}
+
+		for (auto& target : bombTargets) {
+			if (target->toAnimate && now - target->lastAnimationTime >= animationSwitchTime) {
+				target->lastAnimationTime = now;
+				if (target->animate()) {
+					target->toAnimate = false;
 				}
 			}
 		}
@@ -803,6 +863,12 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 
 		for (auto& object : drawables) {
 			object->drawObj();
+		}
+
+		for (auto& target : bombTargets) {
+			if (target->toAnimate) {
+				target->drawSprite();
+			}
 		}
 
 		window.display();

@@ -138,7 +138,6 @@ void rebind (sf::RenderWindow& window, Button& button, sf::Keyboard::Key& key, G
 				case sf::Event::KeyPressed:
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
 						escapePressed = true;
-						//button.changeText(name + keyToString.at(key));
 						return;
 					}
 					else {

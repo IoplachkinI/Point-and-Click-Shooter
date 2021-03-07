@@ -145,10 +145,10 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 		"YELLOW COLOR: " + (keyToString.at(keys.at("yellow"))), window, defaultFont, true);
 
 	buttons.push_back(&backButton);
-	buttons.push_back(&redButton);
-	buttons.push_back(&blueButton);
-	buttons.push_back(&greenButton);
 	buttons.push_back(&yellowButton);
+	buttons.push_back(&greenButton);
+	buttons.push_back(&blueButton);
+	buttons.push_back(&redButton);
 
 	vector<DrawableObj*> drawables;
 	drawables.push_back(&background);
@@ -181,25 +181,21 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 			else if (pressCheckChoose(redButton, mouse)) {
 				rebind(window, redButton, keys.at("red"), mouse, drawables, "RED COLOR: ", escapeAlreadyPressed);
 				redButton.isSelected = false;
-				oneSelected = false;
 				mouse.changeToArrow();
 			}
 			else if (pressCheckChoose(blueButton, mouse)) {
 				rebind(window, blueButton, keys.at("blue"), mouse, drawables, "BLUE COLOR: ", escapeAlreadyPressed);
 				redButton.isSelected = false;
-				oneSelected = false;
 				mouse.changeToArrow();
 			}
 			else if (pressCheckChoose(greenButton, mouse)) {
 				rebind(window, greenButton, keys.at("green"), mouse, drawables, "GREEN COLOR: ", escapeAlreadyPressed);
 				redButton.isSelected = false;
-				oneSelected = false;
 				mouse.changeToArrow();
 			}
 			else if (pressCheckChoose(yellowButton, mouse)) {
 				rebind(window, yellowButton, keys.at("yellow"), mouse, drawables, "YELLOW COLOR: ", escapeAlreadyPressed);
 				redButton.isSelected = false;
-				oneSelected = false;
 				mouse.changeToArrow();
 			}
 
