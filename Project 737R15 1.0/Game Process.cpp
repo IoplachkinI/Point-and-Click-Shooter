@@ -100,7 +100,7 @@ public:
 
 class Heart : public DrawableObj{
 private:
-	int stage;
+	unsigned int stage;
 	Vector2f size;
 	Vector2f pos;
 	Texture texture;
@@ -148,7 +148,7 @@ public:
 	}
 
 
-	int animateBackwards() {
+	bool animateBackwards() {
 		switch (stage) {
 		case 4:
 			object.setTextureRect(IntRect(Vector2i(70, 0), Vector2i(35, 35)));
@@ -161,16 +161,16 @@ public:
 		case 2:
 			object.setTextureRect(IntRect(Vector2i(0, 0), Vector2i(35, 35)));
 			stage = 1;
-			return 1;
+			return true;
 		default:
 			throw logic_error("Wrong stage! ");
 		}
 
-		return 0;
+		return false;
 	}
 
 
-	int animate() {
+	bool animate() {
 		switch (stage) {
 		case 0:
 			object.setTextureRect(IntRect(Vector2i(0, 0), Vector2i(35, 35)));
@@ -187,12 +187,12 @@ public:
 		case 3:
 			object.setTextureRect(IntRect(Vector2i(105, 0), Vector2i(35, 35)));
 			stage = 4;
-			return 1;
+			return true;
 		default:
 			throw logic_error("Wrong stage! ");
 		}
 
-		return 0;
+		return false;
 	}
 
 
@@ -324,18 +324,31 @@ public:
 class BombTarget : public BasicTarget {
 private:
 	int bombradius;
+	unsigned int stage;
+	Texture explosionTexture;
+	Sprite sprite;
 public:
 
 	long long animatetimer;
 
-	BombTarget(float r, float x, float y, string fileName, RenderWindow& w, GameColor color, int Bombradius) :
-		BasicTarget(r, x, y, fileName, w, color) {
-		bombradius = Bombradius;
+	BombTarget(float r, float x, float y, string fileName, string explosionFileName, RenderWindow& w, GameColor color, int Bombradius) :
+		BasicTarget(r, x, y, fileName, w, color), 
+		bombradius(Bombradius) 
+	{
+		if (!explosionTexture.loadFromFile(explosionFileName)) {
+			throw logic_error("Couldn't load texture");
+		}
+
 		animatetimer = 0;
+		sprite = Sprite(explosionTexture, IntRect(Vector2i(0, 0), Vector2i(int(double(bombradius) * sqrt(2)), int(double(bombradius) * sqrt(2)))));
 	}
 
 	int getbombradius() {
 		return bombradius;
+	}
+	
+	void drawSprite() {
+		window.draw(sprite);
 	}
 
 	void explosion(vector<shared_ptr<BasicTarget>>& targets, unsigned long long &score, int scorePerTarget) {
@@ -388,9 +401,6 @@ void deselectOthers(vector<shared_ptr<ColorSelector>>& selectors, int selectedIn
 };
 
 
-
-
-
 ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawables, GameCursor& mouse) {
 
 	bool oneSelected = false;
@@ -415,6 +425,7 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 			}
 			else if (pressCheckChoose(continueButton, mouse)) {
 				mouse.changeToArrow();
+				mouse.LMBalreadyPressed = false;
 				return ExitCode::Play;
 			}
 
@@ -435,7 +446,7 @@ ExitCode pauseMenu(RenderWindow& window, vector<shared_ptr<DrawableObj>> drawabl
 	}
 
 	return ExitCode::BackToRoot;
-}
+};
 
 
 ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse, map<string, int>& parameters, map <string, Keyboard::Key> keys)
@@ -517,7 +528,7 @@ ExitCode GameLoop(const int maxFPS, sf::RenderWindow& window, GameCursor& mouse,
 	for (int i = 0; i < parameters.at("bombProb") / targetAmountCoeff; i++) {
 		float radius = float(window.getSize().x) / 15.f;
 		shared_ptr<BombTarget> newTarget = make_shared<BombTarget>(radius, (rand() % (window.getSize().x - 2 * int(radius))) + radius, window.getSize().y + (rand() % long(radius)) + radius,
-			"bomb_targets.png", window, colors[rand() % colors.size()], 400);
+			"bomb_targets.png", "explosion.png", window, colors[rand() % colors.size()], 400);
 		newTarget->toDraw = false;
 		targets.push_back(newTarget);
 		bombTargets.push_back(newTarget);

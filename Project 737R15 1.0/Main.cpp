@@ -127,60 +127,28 @@ extern const std::map<sf::Keyboard::Key, std::string> keyToString = {
 };
 
 
-/*int controlsMenu(const int& sizeX, const int& sizeY, RenderWindow& window, BG& background, GameCursor& mouse, Keyboard::Key leftKey, Keyboard::Key rightKey, Keyboard::Key speedUpKey, Keyboard::Key rotateKey) {
-	vector <Button> buttons;
-	bool oneSelected = false;
-
-	Button leftButton(100, 35, sizeX / 2, 850, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "LEFT KEY: " + leftKey, window, defaultFont);
-	Button rightButton(100, 35, sizeX / 2, 850, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "RIGHT KEY: " + rightKey, window, defaultFont);
-	Button rotateButton(100, 35, sizeX / 2, 850, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "ROTATE KEY: " + rotateKey, window, defaultFont);
-	Button speedUpButton(100, 35, sizeX / 2, 850, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "SPEED UP KEY: " + speedUpKey, window, defaultFont);
-
-	buttons.push_back(leftButton);
-	buttons.push_back(rightButton);
-	buttons.push_back(rotateButton);
-	buttons.push_back(speedUpButton);
-
-	while (window.isOpen())
-	{
-		Event event;
-
-		window.clear(Color(0, 0, 0));
-
-		while (window.pollEvent(event))
-		{
-			event_handler(event, window, mouse, buttons, oneSelected);
-			window.setMouseCursor(mouse.getCursor());
-		}
-
-		background.draw();
-
-		window.display();
-	}
-}*/
-
-
 ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& musicVolume, map<string, Keyboard::Key>& keys)
 {
-	const int MaxChangeSpeed = 10;
 	bool oneSelected = false;
 	bool oneClicked = false;
-	int ChangeTime = MaxChangeSpeed;
-	int timePassed = 0;
 	bool escapeAlreadyPressed = false;
-	int rebindedKey = -1; //leftKey = 0, rightKey = 1, speedUpKey = 2, rotateKey = 3
 	vector <Button*> buttons;
 
-	//Button volumeButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f + 100.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "MUSIC VOLUME " + to_string(musicVolume), window, defaultFont, true);
-	//Button applyButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 150.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "APPLY", window, defaultFont, true);
 	Button backButton(float(window.getSize().x) / 2.f, float(window.getSize().y) - 75.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), "BACK", window, defaultFont, true);
-	Button redButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f + 100.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), 
+	Button redButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f - 100.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255), 
 		"RED COLOR: " + (keyToString.at(keys.at("red"))), window, defaultFont, true);
+	Button blueButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255),
+		"BLUE COLOR: " + (keyToString.at(keys.at("blue"))), window, defaultFont, true);
+	Button greenButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f + 100.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255),
+		"GREEN COLOR: " + (keyToString.at(keys.at("green"))), window, defaultFont, true);
+	Button yellowButton(float(window.getSize().x) / 2.f, float(window.getSize().y) / 2.f + 200.f, 30, Color(0, 0, 0), Color(255, 0, 0), Color(255, 255, 255),
+		"YELLOW COLOR: " + (keyToString.at(keys.at("yellow"))), window, defaultFont, true);
 
 	buttons.push_back(&backButton);
-	//buttons.push_back(&applyButton);
 	buttons.push_back(&redButton);
-	//buttons.push_back(&volumeButton);
+	buttons.push_back(&blueButton);
+	buttons.push_back(&greenButton);
+	buttons.push_back(&yellowButton);
 
 	vector<DrawableObj*> drawables;
 	drawables.push_back(&background);
@@ -216,6 +184,24 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 				oneSelected = false;
 				mouse.changeToArrow();
 			}
+			else if (pressCheckChoose(blueButton, mouse)) {
+				rebind(window, redButton, keys.at("blue"), mouse, drawables, "BLUE COLOR: ", escapeAlreadyPressed);
+				redButton.isSelected = false;
+				oneSelected = false;
+				mouse.changeToArrow();
+			}
+			else if (pressCheckChoose(greenButton, mouse)) {
+				rebind(window, redButton, keys.at("green"), mouse, drawables, "GREEN COLOR: ", escapeAlreadyPressed);
+				redButton.isSelected = false;
+				oneSelected = false;
+				mouse.changeToArrow();
+			}
+			else if (pressCheckChoose(yellowButton, mouse)) {
+				rebind(window, redButton, keys.at("yellow"), mouse, drawables, "YELLOW COLOR: ", escapeAlreadyPressed);
+				redButton.isSelected = false;
+				oneSelected = false;
+				mouse.changeToArrow();
+			}
 
 			if (Keyboard::isKeyPressed(Keyboard::Escape) && !escapeAlreadyPressed)
 			{
@@ -228,7 +214,6 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 
 		window.setMouseCursor(mouse.getCursor());
 
-		timePassed = 0;
 		oneClicked = false;
 
 		redButton.changeText("RED COLOR: " + keyToString.at(keys.at("red")));
