@@ -185,19 +185,19 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 				mouse.changeToArrow();
 			}
 			else if (pressCheckChoose(blueButton, mouse)) {
-				rebind(window, redButton, keys.at("blue"), mouse, drawables, "BLUE COLOR: ", escapeAlreadyPressed);
+				rebind(window, blueButton, keys.at("blue"), mouse, drawables, "BLUE COLOR: ", escapeAlreadyPressed);
 				redButton.isSelected = false;
 				oneSelected = false;
 				mouse.changeToArrow();
 			}
 			else if (pressCheckChoose(greenButton, mouse)) {
-				rebind(window, redButton, keys.at("green"), mouse, drawables, "GREEN COLOR: ", escapeAlreadyPressed);
+				rebind(window, greenButton, keys.at("green"), mouse, drawables, "GREEN COLOR: ", escapeAlreadyPressed);
 				redButton.isSelected = false;
 				oneSelected = false;
 				mouse.changeToArrow();
 			}
 			else if (pressCheckChoose(yellowButton, mouse)) {
-				rebind(window, redButton, keys.at("yellow"), mouse, drawables, "YELLOW COLOR: ", escapeAlreadyPressed);
+				rebind(window, yellowButton, keys.at("yellow"), mouse, drawables, "YELLOW COLOR: ", escapeAlreadyPressed);
 				redButton.isSelected = false;
 				oneSelected = false;
 				mouse.changeToArrow();
@@ -217,6 +217,9 @@ ExitCode settings(RenderWindow& window, BG& background, GameCursor& mouse, int& 
 		oneClicked = false;
 
 		redButton.changeText("RED COLOR: " + keyToString.at(keys.at("red")));
+		blueButton.changeText("BLUE COLOR: " + keyToString.at(keys.at("blue")));
+		greenButton.changeText("GREEN COLOR: " + keyToString.at(keys.at("green")));
+		yellowButton.changeText("YELLOW COLOR: " + keyToString.at(keys.at("yellow")));
 
 		for (DrawableObj* obj : drawables) {
 			obj->drawObj();
